@@ -152,15 +152,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crypt"
-version = "0.1.0"
-dependencies = [
- "base64",
- "chacha20poly1305",
- "clap",
-]
-
-[[package]]
 name = "crypto-common"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -243,6 +234,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "secr"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "chacha20poly1305",
+ "clap",
 ]
 
 [[package]]
