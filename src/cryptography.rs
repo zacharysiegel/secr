@@ -9,6 +9,7 @@ use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead};
 use std::error::Error;
 
 pub fn encrypt(key: &Vec<u8>, plaintext: &[u8]) -> Result<SecretBase64, Box<dyn Error>> {
+    #[allow(deprecated)] // "chacha20poly1305" depends on "aead" which depends on an old version of "generic-array"
     let key: &chacha20poly1305::Key = chacha20poly1305::Key::from_slice(key);
     let nonce: chacha20poly1305::Nonce = ChaCha20Poly1305::generate_nonce(aead::OsRng);
     let cipher: ChaCha20Poly1305 = ChaCha20Poly1305::new(key);
