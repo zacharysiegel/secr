@@ -1,13 +1,13 @@
 use base64::Engine;
 use clap::error::ErrorKind;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
-use crypt::cryptography;
-use crypt::cryptography::{decrypt, encrypt, generate_key};
-use crypt::secret::{BASE64, SecretBase64, list_secret_names};
+use secr::cryptography;
+use secr::cryptography::{decrypt, encrypt, generate_key};
+use secr::secret::{BASE64, SecretBase64, list_secret_names};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut command: Command = Command::new("shop-crypt")
+    let mut command: Command = Command::new("secr")
         .version("1.0")
         .about("Manage encrypted secrets for the shop application. Uses the ChaCha20Poly1305 algorithm.")
         .author("Zachary Siegel")
