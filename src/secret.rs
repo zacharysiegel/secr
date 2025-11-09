@@ -2,7 +2,6 @@ use crate::load::SecretStore;
 use base64::engine::DecodePaddingMode;
 use base64::Engine;
 use serde::Deserialize;
-use std::fmt::{Display, Formatter};
 
 pub const BASE64: base64::engine::general_purpose::GeneralPurpose = base64::engine::GeneralPurpose::new(
     &base64::alphabet::STANDARD,
@@ -39,6 +38,13 @@ impl SecretBase64 {
             ciphertext: BASE64.decode(&self.ciphertext)?,
         })
     }
+
+    pub fn to_yaml(&self, name: &str) -> String {
+        format!(
+            concat!("{}:\n", "\tnonce: '{}'\n", "\tciphertext: '{}'"),
+            name, self.nonce, self.ciphertext
+        )
+    }
 }
 
 #[derive(Debug)]
@@ -53,14 +59,6 @@ impl SecretBytes {
             nonce: BASE64.encode(&self.nonce),
             ciphertext: BASE64.encode(&self.ciphertext),
         }
-    }
-}
-
-impl Display for SecretBase64 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "__untitled__:")?;
-        writeln!(f, "    nonce: '{}'", self.nonce)?;
-        write!(f, "    ciphertext: '{}'", self.ciphertext)
     }
 }
 
