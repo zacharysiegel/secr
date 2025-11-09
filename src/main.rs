@@ -5,6 +5,35 @@ use secr::cryptography;
 use secr::cryptography::{decrypt, encrypt, generate_key};
 use secr::secret::{list_secret_names, SecretBase64, BASE64};
 use std::error::Error;
+use std::fmt::Display;
+
+enum SubCommand {
+    Encrypt,
+    Decrypt,
+    Key,
+    List,
+}
+
+impl From<SubCommand> for clap::builder::Str {
+    fn from(value: SubCommand) -> Self {
+        Self::from(value.public_string())
+    }
+}
+
+impl SubCommand {
+    pub fn public_string(&self) -> &'static str {
+        match self {
+            SubCommand::Encrypt => "encrypt",
+            SubCommand::Decrypt => "decrypt",
+            SubCommand::Key => "key",
+            SubCommand::List => "list",
+        }
+    }
+
+    pub fn subcommand_matches<'a>(&self, matches: &'a ArgMatches) -> Option<&'a ArgMatches> {
+        matches.subcommand_matches(self.public_string())
+    }
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     let mut command: Command = create_command();
@@ -23,7 +52,7 @@ fn create_command() -> Command {
         .about("Manage encrypted secrets for the shop application. Uses the ChaCha20Poly1305 algorithm.")
         .author("Zachary Siegel")
         .flatten_help(true)
-        .subcommand(Command::new("encrypt")
+        .subcommand(Command::new(SubCommand::Encrypt)
             .about("Encrypt a secret with a key")
             .arg(Arg::new("key")
                 .help("The base64-encoded secret key")
@@ -46,7 +75,7 @@ fn create_command() -> Command {
                 .required(true)
             )
         )
-        .subcommand(Command::new("decrypt")
+        .subcommand(Command::new(SubCommand::Decrypt)
             .about("Decrypt a secret by name")
             .arg(Arg::new("key")
                 .help("The base64-encoded secret key")
@@ -72,17 +101,17 @@ fn create_command() -> Command {
             )
             .arg(&arg_file)
         )
-        .subcommand(Command::new("key")
+        .subcommand(Command::new(SubCommand::Key)
             .about("Generate a new encryption key")
         )
-        .subcommand(Command::new("list")
+        .subcommand(Command::new(SubCommand::List)
             .about("List all available secrets")
             .arg(&arg_file)
         )
 }
 
 fn route(mut command: Command, matches: ArgMatches) {
-    if let Some(sub_matches) = matches.subcommand_matches("encrypt") {
+    if let Some(sub_matches) = SubCommand::Encrypt.subcommand_matches(&matches) {
         let plaintext: &String = sub_matches
             .get_one("plaintext")
             .expect("plaintext is required");
@@ -110,10 +139,10 @@ fn route(mut command: Command, matches: ArgMatches) {
             println!("Generated key (base64):\n\t{}", BASE64.encode(&key));
         }
         println!("{}", secret);
-        return Ok(());
+        return;
     }
 
-    if let Some(sub_matches) = matches.subcommand_matches("decrypt") {
+    if let Some(sub_matches) = SubCommand::Decrypt.subcommand_matches(&matches) {
         let secret_name: &String = sub_matches
             .get_one("name")
             .expect("secret name is required");
@@ -129,13 +158,13 @@ fn route(mut command: Command, matches: ArgMatches) {
         if only_utf8 {
             let plaintext_utf8: String = String::from_utf8(plaintext.clone())?;
             println!("{}", plaintext_utf8);
-            return Ok(());
+            return;
         }
 
         if only_base64 {
             let plaintext_base64: String = BASE64.encode(&plaintext);
             println!("{}", plaintext_base64);
-            return Ok(());
+            return;
         }
 
         println!(
@@ -143,19 +172,19 @@ fn route(mut command: Command, matches: ArgMatches) {
             String::from_utf8(plaintext.clone())?
         );
         println!("Base64 encoding:\n\t{}", BASE64.encode(&plaintext));
-        return Ok(());
+        return;
     }
 
-    if let Some(_) = matches.subcommand_matches("key") {
+    if let Some(_) = SubCommand::Key.subcommand_matches(&matches) {
         let key: Vec<u8> = generate_key();
         println!("Generated key (base64):\n\t{}", BASE64.encode(key));
-        return Ok(());
+        return;
     }
 
-    if let Some(_) = matches.subcommand_matches("list") {
+    if let Some(_) = SubCommand::List.subcommand_matches(&matches) {
         let text: String = list_secret_names().join("\n");
         println!("{}", text);
-        return Ok(());
+        return;
     }
 
     command
