@@ -58,11 +58,9 @@ impl SecretBytes {
 
 impl Display for SecretBase64 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut display: String = String::from("SecretBase64 {\n");
-        display.push_str(&format!("    nonce: String::from(\"{}\"),\n", self.nonce));
-        display.push_str(&format!("    ciphertext: String::from(\"{}\"),\n", self.ciphertext));
-        display.push_str("},");
-        write!(f, "{}", display)
+        writeln!(f, "__untitled__:")?;
+        writeln!(f, "    nonce: '{}'", self.nonce)?;
+        write!(f, "    ciphertext: '{}'", self.ciphertext)
     }
 }
 
