@@ -1,6 +1,6 @@
 [package]
 name = "secr"
-version = "0.1.0"
+version = "0.1.0" # todo: upgrade to 1.0.0 when e2e is verified
 edition = "2024"
 license = "MIT"
 description = "A simple secret manager"
