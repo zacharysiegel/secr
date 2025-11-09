@@ -2,13 +2,13 @@
 //! This algorithm provides an Associated Data feature which we are not currently utilizing.
 //! todo: Associated Data may be useful for recording identifiers for which key was used to encrypt the value.
 
-use crate::data::SECRETS;
+use crate::error::AppError;
+use crate::load::SecretStore;
 use crate::secret::{SecretBase64, SecretBytes};
 use chacha20poly1305::aead::{Aead, Payload};
-use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead};
-use std::error::Error;
+use chacha20poly1305::{aead, AeadCore, ChaCha20Poly1305, KeyInit};
 
-pub fn encrypt(key: &Vec<u8>, plaintext: &[u8]) -> Result<SecretBase64, Box<dyn Error>> {
+pub fn encrypt(key: &Vec<u8>, plaintext: &[u8]) -> Result<SecretBase64, AppError> {
     #[allow(deprecated)] // "chacha20poly1305" depends on "aead" which depends on an old version of "generic-array"
     let key: &chacha20poly1305::Key = chacha20poly1305::Key::from_slice(key);
     let nonce: chacha20poly1305::Nonce = ChaCha20Poly1305::generate_nonce(aead::OsRng);
@@ -26,13 +26,13 @@ pub fn encrypt(key: &Vec<u8>, plaintext: &[u8]) -> Result<SecretBase64, Box<dyn 
     Ok(secret.base64_encode())
 }
 
-pub fn decrypt(key: &Vec<u8>, secret_name: &str) -> Result<Vec<u8>, Box<dyn Error>> {
-    let secrets = SECRETS;
+pub fn decrypt(secrets: &SecretStore, key: &Vec<u8>, secret_name: &str) -> Result<Vec<u8>, AppError> {
     let secret: SecretBytes = secrets
         .get(secret_name)
-        .ok_or(format!(r#"Secret "{}" does not exist"#, secret_name))?
+        .ok_or_else(|| AppError::new(&format!(r#"Secret "{}" does not exist"#, secret_name)))?
         .base64_decode()?;
 
+    #[allow(deprecated)] // "chacha20poly1305" depends on "aead" which depends on an old version of "generic-array"
     Ok(decrypt_raw(
         chacha20poly1305::Key::from_slice(key),
         chacha20poly1305::Nonce::from_slice(secret.nonce.as_slice()),
