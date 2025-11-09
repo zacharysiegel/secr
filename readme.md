@@ -6,7 +6,7 @@
 
 _A simple secret manager._
 
-Manage encrypted secrets stored in a file. Uses the ChaCha20Poly1305 algorithm.
+Manage encrypted secrets stored in a file. Uses the [ChaCha20Poly1305](https://en.wikipedia.org/wiki/ChaCha20-Poly1305) algorithm.
 
 ## Usage
 
@@ -25,7 +25,7 @@ Example:
 ```
 $ secr key
 Generated key (base64):
-	2Af8Ty6PG9ICZppnY5cB8GMPdNg4NubxU4HyPEx1h0E=
+2Af8Ty6PG9ICZppnY5cB8GMPdNg4NubxU4HyPEx1h0E=
 ```
 
 ### Encrypt a secret
@@ -66,14 +66,14 @@ Example:
 ```text
 $ secr decrypt --file secrets.yaml --key '2Af8Ty6PG9ICZppnY5cB8GMPdNg4NubxU4HyPEx1h0E=' 'hello_world'
 UTF-8 encoding:
-	mysecret
+mysecret
 Base64 encoding:
-	bXlzZWNyZXQ=
+bXlzZWNyZXQ=
 ```
 
 ## Versioning
 
-This package follows [Semantic Versioning](https://semver.org/).
+This package follows the [Semantic Versioning](https://semver.org/) convention.
 
 ## License
 
