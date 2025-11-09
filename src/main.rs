@@ -16,6 +16,7 @@ macro_rules! print_labeled {
 }
 
 const STORE_ENV_KEY: &'static str = "SECR__STORE_PATH";
+const UNTITLED_KEY_NAME: &'static str = "__untitled__";
 
 enum SubCommand {
     Encrypt,
@@ -75,6 +76,11 @@ fn create_command() -> Command {
                         .short('g')
                         .action(ArgAction::SetTrue),
                 )
+                .arg(
+                    Arg::new("name")
+                        .help(format!("Assign a name in the structured output. (Default: \"{}\") (Does not affect the encrypted data)", UNTITLED_KEY_NAME))
+                        .long("name")
+                )
                 .group(ArgGroup::new("keys").args(["key", "generate_key"]).required(true).multiple(false))
                 .arg(Arg::new("plaintext").help("The plaintext to encrypt").required(true)),
         )
@@ -109,6 +115,10 @@ fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
 
         let provided_key: Option<&String> = sub_matches.get_one("key");
         let generate_key: bool = sub_matches.get_flag("generate_key");
+        let name: &str = match sub_matches.get_one::<String>("name") {
+            Some(name) => name,
+            None => UNTITLED_KEY_NAME,
+        };
 
         if provided_key.is_some() && generate_key {
             command.error(ErrorKind::DisplayHelp, "key and generate_key are mutually exclusive").exit();
@@ -124,7 +134,7 @@ fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
         if generate_key {
             print_labeled!("Generated key (base64):", BASE64.encode(&key));
         }
-        println!("{}", secret);
+        println!("{}", secret.to_yaml(name));
         return Ok(());
     }
 
