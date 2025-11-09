@@ -6,8 +6,8 @@ use secr::cryptography::{decrypt, encrypt, generate_key};
 use secr::error::AppError;
 use secr::secret::{list_secret_names, SecretBase64, BASE64};
 use secr::{cryptography, load};
-use std::env;
 use std::path::PathBuf;
+use std::{env, process};
 
 const STORE_ENV_KEY: &'static str = "SECR__STORE_PATH";
 
@@ -171,7 +171,13 @@ fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
 fn create_secret_store<'a, T: Into<&'a String>>(opt: Option<T>) -> Result<SecretStore, AppError> {
     let store_path: PathBuf = PathBuf::from(match opt {
         Some(path) => Into::<&String>::into(path).clone(),
-        None => env::var(STORE_ENV_KEY)?, // todo: better error output
+        None => {
+            println!("No file specified. Using file path specified by env:{}", STORE_ENV_KEY);
+            env::var(STORE_ENV_KEY).unwrap_or_else(|e| {
+                eprintln!("{} [{}]", e, STORE_ENV_KEY);
+                process::exit(1);
+            })
+        }
     });
     load::load_secrets_from_file(&store_path)
 }
