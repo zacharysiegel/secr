@@ -53,10 +53,10 @@ fn create_command() -> Command {
         ))
         .long("file")
         .short('f');
-    Command::new("secr")
-        .version("1.0")
-        .about("Manage encrypted secrets for the shop application. Uses the ChaCha20Poly1305 algorithm.")
-        .author("Zachary Siegel")
+    Command::new(env!("CARGO_PKG_NAME"))
+        .version(env!("CARGO_PKG_VERSION"))
+        .about(env!("CARGO_PKG_DESCRIPTION"))
+        .author(clap::crate_authors!("\n"))
         .flatten_help(true)
         .subcommand(
             Command::new(SubCommand::Encrypt)
