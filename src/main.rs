@@ -9,6 +9,12 @@ use secr::{cryptography, load};
 use std::path::PathBuf;
 use std::{env, process};
 
+macro_rules! print_labeled {
+    ($format:literal, $($arg:tt)*) => {
+        ::std::print!(::std::concat!("\x1b[4m", $format, "\x1b[0m", "\n{}\n"), $($arg)*)
+    };
+}
+
 const STORE_ENV_KEY: &'static str = "SECR__STORE_PATH";
 
 enum SubCommand {
@@ -116,7 +122,7 @@ fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
         let secret: SecretBase64 = encrypt(&key, plaintext.as_bytes())?;
 
         if generate_key {
-            println!("Generated key (base64):\n\t{}", BASE64.encode(&key));
+            print_labeled!("Generated key (base64):", BASE64.encode(&key));
         }
         println!("{}", secret);
         return Ok(());
@@ -146,14 +152,14 @@ fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
             return Ok(());
         }
 
-        println!("UTF-8 encoding:\n\t{}", String::from_utf8(plaintext.clone())?);
-        println!("Base64 encoding:\n\t{}", BASE64.encode(&plaintext));
+        print_labeled!("UTF-8 encoding:", String::from_utf8(plaintext.clone())?);
+        print_labeled!("Base64 encoding:", BASE64.encode(&plaintext));
         return Ok(());
     }
 
     if let Some(_) = SubCommand::Key.subcommand_matches(&matches) {
         let key: Vec<u8> = generate_key();
-        println!("Generated key (base64):\n\t{}", BASE64.encode(key));
+        print_labeled!("Generated key (base64)", BASE64.encode(key));
         return Ok(());
     }
 
