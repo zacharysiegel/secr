@@ -1,11 +1,19 @@
+mod error;
+
+use crate::error::AppError;
 use base64::Engine;
 use clap::error::ErrorKind;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
 use secr::cryptography;
 use secr::cryptography::{decrypt, encrypt, generate_key};
 use secr::secret::{list_secret_names, SecretBase64, BASE64};
+use std::env;
 use std::error::Error;
 use std::fmt::Display;
+use std::ops::Deref;
+use std::path::PathBuf;
+
+const STORE_ENV_KEY: &'static str = "SECR__STORE_PATH";
 
 enum SubCommand {
     Encrypt,
@@ -35,16 +43,15 @@ impl SubCommand {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), AppError> {
     let mut command: Command = create_command();
     let matches: ArgMatches = command.get_matches_mut();
-    route(command, matches);
-    Ok(())
+    route(command, matches)
 }
 
 fn create_command() -> Command {
     let arg_file: Arg = Arg::new("file")
-        .help("Path to the file storing the encrypted secrets. If unset, tries to read from the path specified by 'SECR_STORE_PATH'")
+        .help(format!("Path to the file storing the encrypted secrets. If unset, tries to read from the path specified by '{}'", STORE_ENV_KEY))
         .long("file")
         .short("f");
     Command::new("secr")
@@ -110,7 +117,7 @@ fn create_command() -> Command {
         )
 }
 
-fn route(mut command: Command, matches: ArgMatches) {
+fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
     if let Some(sub_matches) = SubCommand::Encrypt.subcommand_matches(&matches) {
         let plaintext: &String = sub_matches
             .get_one("plaintext")
@@ -139,7 +146,7 @@ fn route(mut command: Command, matches: ArgMatches) {
             println!("Generated key (base64):\n\t{}", BASE64.encode(&key));
         }
         println!("{}", secret);
-        return;
+        return Ok(());
     }
 
     if let Some(sub_matches) = SubCommand::Decrypt.subcommand_matches(&matches) {
@@ -152,19 +159,24 @@ fn route(mut command: Command, matches: ArgMatches) {
         };
         let only_utf8: bool = sub_matches.get_flag("utf8");
         let only_base64: bool = sub_matches.get_flag("base64");
+        let store_path: PathBuf = PathBuf::from(match sub_matches.get_one::<String>("file") {
+            Some(path) => path.clone(),
+            None => env::var(STORE_ENV_KEY)?,
+        });
+        //todo!(store_path);
 
         let plaintext: Vec<u8> = decrypt(&key, secret_name)?;
 
         if only_utf8 {
             let plaintext_utf8: String = String::from_utf8(plaintext.clone())?;
             println!("{}", plaintext_utf8);
-            return;
+            return Ok(());
         }
 
         if only_base64 {
             let plaintext_base64: String = BASE64.encode(&plaintext);
             println!("{}", plaintext_base64);
-            return;
+            return Ok(());
         }
 
         println!(
@@ -172,19 +184,19 @@ fn route(mut command: Command, matches: ArgMatches) {
             String::from_utf8(plaintext.clone())?
         );
         println!("Base64 encoding:\n\t{}", BASE64.encode(&plaintext));
-        return;
+        return Ok(());
     }
 
     if let Some(_) = SubCommand::Key.subcommand_matches(&matches) {
         let key: Vec<u8> = generate_key();
         println!("Generated key (base64):\n\t{}", BASE64.encode(key));
-        return;
+        return Ok(());
     }
 
     if let Some(_) = SubCommand::List.subcommand_matches(&matches) {
         let text: String = list_secret_names().join("\n");
         println!("{}", text);
-        return;
+        return Ok(());
     }
 
     command
