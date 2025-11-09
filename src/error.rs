@@ -145,10 +145,6 @@ impl AppErrorStatic {
         };
         app_error
     }
-
-    pub fn invalid_size() -> AppErrorStatic {
-        Self::new("invalid size") // todo: refactor usages to use this
-    }
 }
 
 impl_from_error!(env::VarError);
