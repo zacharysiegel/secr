@@ -3,11 +3,22 @@ use clap::error::ErrorKind;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
 use secr::cryptography;
 use secr::cryptography::{decrypt, encrypt, generate_key};
-use secr::secret::{BASE64, SecretBase64, list_secret_names};
+use secr::secret::{list_secret_names, SecretBase64, BASE64};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let mut command: Command = Command::new("secr")
+    let mut command: Command = create_command();
+    let matches: ArgMatches = command.get_matches_mut();
+    route(command, matches);
+    Ok(())
+}
+
+fn create_command() -> Command {
+    let arg_file: Arg = Arg::new("file")
+        .help("Path to the file storing the encrypted secrets. If unset, tries to read from the path specified by 'SECR_STORE_PATH'")
+        .long("file")
+        .short("f");
+    Command::new("secr")
         .version("1.0")
         .about("Manage encrypted secrets for the shop application. Uses the ChaCha20Poly1305 algorithm.")
         .author("Zachary Siegel")
@@ -16,47 +27,61 @@ fn main() -> Result<(), Box<dyn Error>> {
             .about("Encrypt a secret with a key")
             .arg(Arg::new("key")
                 .help("The base64-encoded secret key")
+                .long("key")
                 .short('k')
-                .long("key"))
+            )
             .arg(Arg::new("generate_key")
                 .help("Generate a new key during encryption rather than accepting an existing key")
-                .short('g')
                 .long("generate-key")
-                .action(ArgAction::SetTrue))
+                .short('g')
+                .action(ArgAction::SetTrue)
+            )
             .group(ArgGroup::new("keys")
                 .args(["key", "generate_key"])
                 .required(true)
-                .multiple(false))
+                .multiple(false)
+            )
             .arg(Arg::new("plaintext")
                 .help("The plaintext to encrypt")
-                .required(true)))
+                .required(true)
+            )
+        )
         .subcommand(Command::new("decrypt")
             .about("Decrypt a secret by name")
             .arg(Arg::new("key")
                 .help("The base64-encoded secret key")
                 .short('k')
                 .long("key")
-                .required(true))
+                .required(true)
+            )
             .arg(Arg::new("name")
                 .help("The name of the encrypted secret")
-                .required(true))
+                .required(true)
+            )
             .arg(Arg::new("utf8")
                 .long("utf8")
                 .conflicts_with("base64")
                 .action(ArgAction::SetTrue)
-                .help("Print only the UTF-8-encoded plaintext to standard output"))
+                .help("Print only the UTF-8-encoded plaintext to standard output")
+            )
             .arg(Arg::new("base64")
+                .help("Print only the Base64-encoded plaintext to standard output")
                 .long("base64")
                 .conflicts_with("utf8")
                 .action(ArgAction::SetTrue)
-                .help("Print only the Base64-encoded plaintext to standard output")))
+            )
+            .arg(&arg_file)
+        )
         .subcommand(Command::new("key")
-            .about("Generate a new encryption key"))
+            .about("Generate a new encryption key")
+        )
         .subcommand(Command::new("list")
-            .about("List all available secrets"))
-        ;
-    let matches: ArgMatches = command.clone().get_matches();
+            .about("List all available secrets")
+            .arg(&arg_file)
+        )
+}
 
+fn route(mut command: Command, matches: ArgMatches) {
     if let Some(sub_matches) = matches.subcommand_matches("encrypt") {
         let plaintext: &String = sub_matches
             .get_one("plaintext")
