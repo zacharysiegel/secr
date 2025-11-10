@@ -1,14 +1,14 @@
 use base64::Engine;
 use clap::error::ErrorKind;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
-use load::SecretStore;
 use secr::cryptography::{decrypt, encrypt, generate_key};
 use secr::error::Error;
-use secr::load::list_secret_names;
 use secr::secret::{BASE64, SecretBase64};
-use secr::{cryptography, load};
+use secr::store::list_secret_names;
+use secr::{cryptography, load, store};
 use std::path::PathBuf;
 use std::{env, process};
+use store::SecretStore;
 
 macro_rules! print_labeled {
     ($format:literal, $($arg:tt)*) => {

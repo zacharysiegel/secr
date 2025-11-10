@@ -3,8 +3,8 @@
 //! todo: Associated Data may be useful for recording identifiers for which key was used to encrypt the value.
 
 use crate::error::Error;
-use crate::load::SecretStore;
 use crate::secret::{SecretBase64, SecretBytes};
+use crate::store::SecretStore;
 use chacha20poly1305::aead::{Aead, Payload};
 use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead};
 
