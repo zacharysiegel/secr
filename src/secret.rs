@@ -1,6 +1,5 @@
-use crate::load::SecretStore;
-use base64::engine::DecodePaddingMode;
 use base64::Engine;
+use base64::engine::DecodePaddingMode;
 use serde::Deserialize;
 
 pub const BASE64: base64::engine::general_purpose::GeneralPurpose = base64::engine::GeneralPurpose::new(
@@ -60,8 +59,4 @@ impl SecretBytes {
             ciphertext: BASE64.encode(&self.ciphertext),
         }
     }
-}
-
-pub fn list_secret_names(secrets: &SecretStore) -> Vec<String> {
-    secrets.keys().into_iter().map(|key| key.to_string()).collect::<Vec<String>>()
 }

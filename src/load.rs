@@ -42,3 +42,7 @@ pub fn load_secrets_from_file(path: &Path) -> Result<SecretStore, Error> {
 
     Ok(store_owned)
 }
+
+pub fn list_secret_names(secrets: &SecretStore) -> Vec<String> {
+    secrets.keys().into_iter().map(|key| key.to_string()).collect::<Vec<String>>()
+}

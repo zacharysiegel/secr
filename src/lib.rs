@@ -1,6 +1,6 @@
 pub mod cryptography;
-pub mod secret;
-pub mod load;
 pub mod error;
+pub mod load;
+pub mod secret;
 
 pub use secret::BASE64;
