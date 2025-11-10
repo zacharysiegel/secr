@@ -37,8 +37,8 @@ secr encrypt --key '<symmetric_key>' '<plaintext>'
 Output is preformatted in YAML. Example:
 
 ```
-$ secr encrypt --key '2Af8Ty6PG9ICZppnY5cB8GMPdNg4NubxU4HyPEx1h0E=' 'mysecret'
-__untitled__:
+$ secr encrypt --name 'hello_world' --key '2Af8Ty6PG9ICZppnY5cB8GMPdNg4NubxU4HyPEx1h0E=' 'mysecret'
+hello_world:
     nonce: 'qt+WBOWfII63uI9q'
     ciphertext: 'qTEMbZ5SZVox7Mmsc61cXbEbzYuKVO1u'
 ```
