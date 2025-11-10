@@ -6,7 +6,7 @@ use crate::error::Error;
 use crate::load::SecretStore;
 use crate::secret::{SecretBase64, SecretBytes};
 use chacha20poly1305::aead::{Aead, Payload};
-use chacha20poly1305::{aead, AeadCore, ChaCha20Poly1305, KeyInit};
+use chacha20poly1305::{AeadCore, ChaCha20Poly1305, KeyInit, aead};
 
 pub fn encrypt(key: &Vec<u8>, plaintext: &[u8]) -> Result<SecretBase64, Error> {
     #[allow(deprecated)] // "chacha20poly1305" depends on "aead" which depends on an old version of "generic-array"
