@@ -3,7 +3,7 @@ use clap::error::ErrorKind;
 use clap::{Arg, ArgAction, ArgGroup, ArgMatches, Command};
 use load::SecretStore;
 use secr::cryptography::{decrypt, encrypt, generate_key};
-use secr::error::AppError;
+use secr::error::Error;
 use secr::secret::{list_secret_names, SecretBase64, BASE64};
 use secr::{cryptography, load};
 use std::path::PathBuf;
@@ -46,7 +46,7 @@ impl SubCommand {
     }
 }
 
-fn main() -> Result<(), AppError> {
+fn main() -> Result<(), Error> {
     let mut command: Command = create_command();
     let matches: ArgMatches = command.get_matches_mut();
     route(command, matches)
@@ -109,7 +109,7 @@ fn create_command() -> Command {
         .subcommand(Command::new(SubCommand::List).about("List all available secrets").arg(&arg_file))
 }
 
-fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
+fn route(mut command: Command, matches: ArgMatches) -> Result<(), Error> {
     if let Some(sub_matches) = SubCommand::Encrypt.subcommand_matches(&matches) {
         let plaintext: &String = sub_matches.get_one("plaintext").expect("plaintext is required");
 
@@ -184,7 +184,7 @@ fn route(mut command: Command, matches: ArgMatches) -> Result<(), AppError> {
     command.error(ErrorKind::DisplayHelp, "Invalid invocation").exit();
 }
 
-fn create_secret_store<'a, T: Into<&'a String>>(opt: Option<T>) -> Result<SecretStore, AppError> {
+fn create_secret_store<'a, T: Into<&'a String>>(opt: Option<T>) -> Result<SecretStore, Error> {
     let store_path: PathBuf = PathBuf::from(match opt {
         Some(path) => Into::<&String>::into(path).clone(),
         None => {

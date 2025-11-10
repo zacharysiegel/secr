@@ -1,4 +1,4 @@
-use crate::error::AppError;
+use crate::error::Error;
 use crate::secret::{SecretBase64, SecretBase64Ref};
 use std::collections::BTreeMap;
 use std::fs;
@@ -31,7 +31,7 @@ impl SecretStore {
     }
 }
 
-pub fn load_secrets_from_file(path: &Path) -> Result<SecretStore, AppError> {
+pub fn load_secrets_from_file(path: &Path) -> Result<SecretStore, Error> {
     let bytes: Vec<u8> = fs::read(&path)?;
     let mut store_owned: SecretStore = SecretStore::new();
     let store_ref: BTreeMap<&str, SecretBase64Ref> = serde_yaml_ng::from_slice(bytes.as_slice())?;

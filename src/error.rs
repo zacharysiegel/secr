@@ -1,18 +1,17 @@
 use chacha20poly1305::aead;
 use std::backtrace::{Backtrace, BacktraceStatus};
-use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
-use std::{env, fmt, io, string};
+use std::{env, error, fmt, io, string};
 
 macro_rules! impl_from_error {
     ($error_type:ty) => {
-        impl From<$error_type> for $crate::error::AppError {
+        impl From<$error_type> for $crate::error::Error {
             fn from(value: $error_type) -> Self {
                 Self::from_error_default(::std::boxed::Box::new(value))
             }
         }
 
-        impl From<$error_type> for $crate::error::AppErrorStatic {
+        impl From<$error_type> for $crate::error::ErrorStatic {
             fn from(value: $error_type) -> Self {
                 Self::new(&value.to_string())
             }
@@ -21,15 +20,15 @@ macro_rules! impl_from_error {
 }
 
 /// Should be initialized lazily (e.g. [Option::ok_or_else]) for captured backtraces to make sense.
-pub struct AppError {
+pub struct Error {
     pub message: String,
-    pub sub_error: Option<Box<dyn Error>>,
+    pub sub_error: Option<Box<dyn error::Error>>,
     pub backtrace: Backtrace,
 }
 
-impl Display for AppError {
+impl Display for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "AppError [{}]", self.message)?;
+        write!(f, "Error [{}]", self.message)?;
         if let Some(sub_error) = &self.sub_error {
             write!(f, "\n[{}]", sub_error)?;
         }
@@ -42,23 +41,23 @@ impl Display for AppError {
 }
 
 // When main exits with Result::Err, it prints the Debug formatting of the Error
-impl Debug for AppError {
+impl Debug for Error {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(self, f)
     }
 }
 
-impl Error for AppError {}
+impl error::Error for Error {}
 
-impl Default for AppError {
+impl Default for Error {
     fn default() -> Self {
         Self::new(Self::DEFAULT_MESSAGE)
     }
 }
 
-impl From<AppErrorStatic> for AppError {
-    fn from(value: AppErrorStatic) -> Self {
-        AppError {
+impl From<ErrorStatic> for Error {
+    fn from(value: ErrorStatic) -> Self {
+        Error {
             message: value.message,
             sub_error: None,
             backtrace: value.backtrace,
@@ -66,42 +65,41 @@ impl From<AppErrorStatic> for AppError {
     }
 }
 
-impl AppError {
+impl Error {
     const DEFAULT_MESSAGE: &'static str = "unspecified";
 
-    pub fn new(message: &str) -> AppError {
+    pub fn new(message: &str) -> Error {
         Self::_new(message, None)
     }
 
-    pub fn from_error(message: &str, error: Box<dyn Error>) -> AppError {
+    pub fn from_error(message: &str, error: Box<dyn error::Error>) -> Error {
         Self::_new(message, Some(error))
     }
 
-    pub fn from_error_default(error: Box<dyn Error>) -> AppError {
+    pub fn from_error_default(error: Box<dyn error::Error>) -> Error {
         Self::_new(&error.to_string(), Some(error))
     }
 
-    fn _new(message: &str, error: Option<Box<dyn Error>>) -> AppError {
+    fn _new(message: &str, error: Option<Box<dyn error::Error>>) -> Error {
         let backtrace: Backtrace = Backtrace::force_capture();
-        let app_error = AppError {
+        Error {
             message: format!("Error: {}", message),
             sub_error: error,
             backtrace,
-        };
-        app_error
+        }
     }
 }
 
-/// Like [AppError], but cannot include a sub error (in order to be dyn-compatible)
+/// Like [Error], but cannot include a sub error (in order to be dyn-compatible)
 /// Should be initialized lazily (e.g. [Option::ok_or_else]) for captured backtraces to make sense.
-pub struct AppErrorStatic {
+pub struct ErrorStatic {
     pub message: String,
     pub backtrace: Backtrace,
 }
 
-impl Display for AppErrorStatic {
+impl Display for ErrorStatic {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "AppError [{}]", self.message)?;
+        write!(f, "Error [{}]", self.message)?;
         match self.backtrace.status() {
             BacktraceStatus::Unsupported | BacktraceStatus::Disabled => Ok(()),
             BacktraceStatus::Captured => write!(f, "\n{}", self.backtrace),
@@ -111,39 +109,38 @@ impl Display for AppErrorStatic {
 }
 
 // When main exits with Result::Err, it prints the Debug formatting of the Error
-impl Debug for AppErrorStatic {
+impl Debug for ErrorStatic {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(self, f)
     }
 }
 
-impl Error for AppErrorStatic {}
+impl error::Error for ErrorStatic {}
 
-impl Default for AppErrorStatic {
+impl Default for ErrorStatic {
     fn default() -> Self {
         Self::new(Self::DEFAULT_MESSAGE)
     }
 }
 
-impl From<AppError> for AppErrorStatic {
-    fn from(value: AppError) -> Self {
-        AppErrorStatic {
+impl From<Error> for ErrorStatic {
+    fn from(value: Error) -> Self {
+        ErrorStatic {
             message: value.message,
             backtrace: value.backtrace,
         }
     }
 }
 
-impl AppErrorStatic {
+impl ErrorStatic {
     const DEFAULT_MESSAGE: &'static str = "unspecified";
 
-    pub fn new(message: &str) -> AppErrorStatic {
+    pub fn new(message: &str) -> ErrorStatic {
         let backtrace: Backtrace = Backtrace::force_capture();
-        let app_error = AppErrorStatic {
+        ErrorStatic {
             message: format!("Error: {}", message),
             backtrace,
-        };
-        app_error
+        }
     }
 }
 
