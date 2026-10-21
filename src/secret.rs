@@ -39,8 +39,9 @@ impl SecretBase64 {
     }
 
     pub fn to_yaml(&self, name: &str) -> String {
+        // YAML forbids tabs in indentation.
         format!(
-            concat!("{}:\n", "\tnonce: '{}'\n", "\tciphertext: '{}'"),
+            concat!("{}:\n", "    nonce: '{}'\n", "    ciphertext: '{}'"),
             name, self.nonce, self.ciphertext
         )
     }
